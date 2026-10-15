@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is Failure Good for You? — Интерактивный тренажёр</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --bg-deep: #0a0e27;
+    --bg-mid: #1a1f3a;
+    --bg-light: #2a2f4a;
+    --accent-coral: #FF6B6B;
+    --accent-cyan: #4ECDC4;
+    --accent-gold: #FFD93D;
+    --accent-purple: #A78BFA;
+    --accent-pink: #F472B6;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --success: #10B981;
+    --error: #EF4444;
+  }
+
+  html { scroll-behavior: smooth; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+    background: var(--bg-deep);
+    min-height: 100vh;
+    color: var(--text-primary);
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated background orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+    animation: float 20s ease-in-out infinite;
+  }
+  .orb-1 { width: 500px; height: 500px; background: var(--accent-coral); top: -200px; left: -200px; animation-delay: 0s; }
+  .orb-2 { width: 400px; height: 400px; background: var(--accent-cyan); top: 40%; right: -150px; animation-delay: -7s; }
+  .orb-3 { width: 350px; height: 350px; background: var(--accent-purple); bottom: -100px; left: 30%; animation-delay: -14s; }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(50px, -50px) scale(1.1); }
+    66% { transform: translate(-30px, 30px) scale(0.9); }
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Hero Section */
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(78, 205, 196, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  .hero-badge-dot {
+    width: 8px; height: 8px;
+    background: var(--accent-coral);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  h1 {
+    font-size: clamp(2em, 5vw, 3.5em);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #94A3B8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  h1 .highlight {
+    background: linear-gradient(135deg, var(--accent-coral), var(--accent-gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 1.15em;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* Stats Cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: var(--stat-color, var(--accent-coral));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s;
+  }
+
+  .stat-card:hover::before { transform: scaleX(1); }
+  .stat-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.15); }
+
+  .stat-emoji {
+    font-size: 1.8em;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .stat-num {
+    font-size: 2em;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Achievements */
+  .achievements {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 24px;
+    min-height: 44px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    background: var(--glass-bg);
+    border: 2px solid var(--glass-border);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: help;
+    position: relative;
+  }
+
+  .badge.locked { opacity: 0.3; filter: grayscale(1); }
+  .badge.unlocked {
+    opacity: 1;
+    filter: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 20px rgba(255, 217, 61, 0.3);
+    animation: badgeUnlock 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes badgeUnlock {
+    0% { transform: scale(0) rotate(-180deg); }
+    60% { transform: scale(1.3) rotate(10deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  .badge:hover { transform: scale(1.15) rotate(5deg); }
+
+  .badge-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-light);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75em;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    border: 1px solid var(--glass-border);
+  }
+
+  .badge:hover .badge-tooltip { opacity: 1; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    padding: 12px 24px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(10px);
+  }
+
+  .tab-btn:hover {
+    color: var(--text-primary);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent-coral), var(--accent-pink));
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
+  }
+
+  .tab-emoji { font-size: 1.2em; }
+
+  /* Section */
+  .section { display: none; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Glass Card */
+  .card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 32px;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .card-header-emoji {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent-coral), var(--accent-pink));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+  }
+
+  .card-title {
+    font-size: 1.4em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .card-subtitle {
+    color: var(--text-muted);
+    font-size: 0.85em;
+    margin-top: 2px;
+  }
+
+  /* ============ ИСПРАВЛЕННЫЕ FLASHCARDS ============ */
+  .flashcard-wrapper {
+    perspective: 1500px;
+    margin: 24px auto;
+    max-width: 520px;
+  }
+
+  .flashcard {
+    width: 100%;
+    height: 360px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    transform-origin: center center;
+  }
+
+  .flashcard.flipped { 
+    transform: rotateY(180deg); 
+  }
+
+  .flashcard-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow-y: auto;
+  }
+
+  .flashcard-front {
+    background: linear-gradient(135deg, var(--accent-coral), var(--accent-pink));
+    color: white;
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  .flashcard-front::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+    animation: shimmer 8s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes shimmer {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .fc-emoji {
+    font-size: 3em;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+  }
+
+  .fc-word {
+    font-size: 2.2em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .fc-hint {
+    font-size: 0.9em;
+    opacity: 0.8;
+    position: relative;
+    z-index: 1;
+  }
+
+  .flashcard-back {
+    background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+    color: var(--text-primary);
+    transform: rotateY(180deg);
+    border: 1px solid var(--glass-border);
+    z-index: 1;
+  }
+
+  .fc-translation {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--accent-cyan);
+  }
+
+  .fc-example {
+    font-size: 0.95em;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.6;
+    padding: 16px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    border-left: 3px solid var(--accent-cyan);
+    max-width: 100%;
+  }
+
+  .card-counter {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .flashcard-nav {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .nav-btn {
+    padding: 12px 28px;
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-coral);
+    box-shadow: 0 8px 20px rgba(255,107,107,0.2);
+  }
+
+  .nav-btn.primary {
+    background: linear-gradient(135deg, var(--accent-coral), var(--accent-pink));
+    border-color: transparent;
+  }
+
+  /* Quiz */
+  .quiz-progress {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+  }
+
+  .quiz-dot {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.08);
+    transition: all 0.3s;
+  }
+
+  .quiz-dot.correct { background: var(--success); }
+  .quiz-dot.wrong { background: var(--error); }
+  .quiz-dot.active { background: var(--accent-coral); box-shadow: 0 0 12px var(--accent-coral); }
+
+  .quiz-question {
+    font-size: 1.25em;
+    margin-bottom: 24px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  .quiz-question b { color: var(--accent-gold); }
+
+  .quiz-options {
+    display: grid;
+    gap: 12px;
+  }
+
+  .quiz-option {
+    padding: 18px 24px;
+    border: 2px solid var(--glass-border);
+    border-radius: 16px;
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .quiz-option:hover:not(.disabled) {
+    border-color: var(--accent-coral);
+    transform: translateX(4px);
+    background: rgba(255,107,107,0.08);
+  }
+
+  .quiz-option .option-letter {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .quiz-option.correct {
+    border-color: var(--success);
+    background: rgba(16,185,129,0.1);
+    animation: correctPulse 0.6s;
+  }
+
+  .quiz-option.correct .option-letter {
+    background: var(--success);
+    color: white;
+  }
+
+  .quiz-option.wrong {
+    border-color: var(--error);
+    background: rgba(239,68,68,0.1);
+    animation: shake 0.5s;
+  }
+
+  .quiz-option.wrong .option-letter {
+    background: var(--error);
+    color: white;
+  }
+
+  .quiz-option.disabled { pointer-events: none; opacity: 0.6; }
+
+  @keyframes correctPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); box-shadow: 0 0 30px rgba(16,185,129,0.4); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  .quiz-feedback {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-size: 0.95em;
+    display: none;
+    animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: rgba(16,185,129,0.12); color: var(--success); border: 1px solid var(--success); }
+  .quiz-feedback.wrong-fb { background: rgba(239,68,68,0.12); color: var(--error); border: 1px solid var(--error); }
+
+  .quiz-next-btn {
+    margin-top: 16px;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, var(--accent-coral), var(--accent-pink));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    display: none;
+    transition: all 0.3s;
+    box-shadow: 0 8px 24px rgba(255,107,107,0.3);
+  }
+
+  .quiz-next-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,107,107,0.4); }
+  .quiz-next-btn.show { display: inline-block; }
+
+  .quiz-score {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .quiz-score-emoji {
+    font-size: 4em;
+    margin-bottom: 16px;
+    display: block;
+    animation: bounce 0.8s;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  .quiz-score-num {
+    font-size: 3em;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  /* Matching */
+  .match-instruction {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    font-size: 0.9em;
+  }
+
+  .match-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .match-col h4 {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .match-item {
+    padding: 16px;
+    border: 2px solid var(--glass-border);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 0.95em;
+    text-align: center;
+    background: var(--glass-bg);
+    font-weight: 500;
+  }
+
+  .match-item:hover:not(.matched) {
+    border-color: var(--accent-coral);
+    transform: translateY(-2px);
+  }
+
+  .match-item.selected {
+    border-color: var(--accent-coral);
+    background: rgba(255,107,107,0.15);
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(255,107,107,0.2);
+  }
+
+  .match-item.matched {
+    border-color: var(--success);
+    background: rgba(16,185,129,0.15);
+    color: var(--success);
+    pointer-events: none;
+    animation: matchSuccess 0.5s;
+  }
+
+  @keyframes matchSuccess {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  .match-item.wrong-match {
+    animation: shake 0.5s;
+    border-color: var(--error);
+  }
+
+  /* Fill In */
+  .fill-sentence {
+    font-size: 1.15em;
+    line-height: 2.2;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+
+  .fill-input {
+    background: rgba(0,0,0,0.3);
+    border: 2px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    color: var(--text-primary);
+    font-size: 1em;
+    font-weight: 600;
+    width: 200px;
+    transition: all 0.3s;
+    font-family: inherit;
+  }
+
+  .fill-input:focus {
+    outline: none;
+    border-color: var(--accent-coral);
+    box-shadow: 0 0 0 4px rgba(255,107,107,0.15);
+  }
+
+  .fill-input.correct-input {
+    border-color: var(--success);
+    background: rgba(16,185,129,0.15);
+    color: var(--success);
+  }
+
+  .fill-input.wrong-input {
+    border-color: var(--error);
+    background: rgba(239,68,68,0.15);
+    animation: shake 0.5s;
+  }
+
+  .fill-hint {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .check-btn {
+    padding: 12px 28px;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 8px 20px rgba(167,139,250,0.3);
+  }
+
+  .check-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(167,139,250,0.4); }
+
+  /* Grammar */
+  .grammar-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-left: 4px solid var(--accent-coral);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+    transition: all 0.3s;
+  }
+
+  .grammar-card:hover {
+    transform: translateX(4px);
+    border-left-color: var(--accent-gold);
+    background: rgba(255,255,255,0.06);
+  }
+
+  .grammar-card .rule {
+    color: var(--accent-cyan);
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 1.05em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .grammar-card .formula {
+    color: var(--accent-gold);
+    font-size: 0.85em;
+    margin-bottom: 10px;
+    font-family: 'Courier New', monospace;
+    padding: 6px 12px;
+    background: rgba(255,217,61,0.08);
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  .grammar-card .example {
+    color: var(--text-primary);
+    font-style: italic;
+    margin-bottom: 6px;
+    line-height: 1.5;
+    padding-left: 12px;
+    border-left: 2px solid var(--accent-purple);
+  }
+
+  .grammar-card .translation {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    margin-bottom: 10px;
+  }
+
+  .grammar-card .note {
+    color: var(--text-muted);
+    font-size: 0.85em;
+    padding-top: 10px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  /* Confetti Canvas */
+  #confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    background: var(--bg-light);
+    border: 1px solid var(--glass-border);
+    padding: 14px 20px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    transform: translateX(400px);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1001;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    backdrop-filter: blur(20px);
+  }
+
+  .toast.show { transform: translateX(0); }
+  .toast-emoji { font-size: 1.5em; }
+
+  /* Keyboard hint */
+  .keyboard-hint {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8em;
+    margin-top: 16px;
+  }
+
+  .key {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.85em;
+    margin: 0 2px;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .match-container { grid-template-columns: 1fr; }
+    .container { padding: 24px 16px; }
+    .card { padding: 24px 20px; }
+    .flashcard { height: 320px; }
+    .fc-word { font-size: 1.7em; }
+    .quiz-option { padding: 14px 18px; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--bg-light); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-coral); }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="toast" id="toast">
+  <span class="toast-emoji">🎉</span>
+  <span id="toast-text">Достижение разблокировано!</span>
+</div>
+
+<div class="container">
+  
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      <span>Advanced English · B2–C1</span>
+    </div>
+    <h1>Is <span class="highlight">Failure</span> Good for You?</h1>
+    <p class="subtitle">Освой продвинутую лексику, идиомы и грамматические конструкции через интерактивные упражнения</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card" style="--stat-color: var(--accent-coral);">
+      <span class="stat-emoji">📚</span>
+      <div class="stat-num" id="statLearned">0</div>
+      <div class="stat-label">Изучено</div>
+    </div>
+    <div class="stat-card" style="--stat-color: var(--accent-cyan);">
+      <span class="stat-emoji">✅</span>
+      <div class="stat-num" id="statCorrect">0</div>
+      <div class="stat-label">Правильно</div>
+    </div>
+    <div class="stat-card" style="--stat-color: var(--accent-gold);">
+      <span class="stat-emoji">🔥</span>
+      <div class="stat-num" id="statStreak">0</div>
+      <div class="stat-label">Серия</div>
+    </div>
+    <div class="stat-card" style="--stat-color: var(--accent-purple);">
+      <span class="stat-emoji">🎯</span>
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">Попыток</div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="achievements" id="achievements">
+    <div class="badge locked" data-badge="first-steps" title="Первые шаги">
+      <span>👶</span>
+      <div class="badge-tooltip">Первые шаги: 5 карточек</div>
+    </div>
+    <div class="badge locked" data-badge="streak-3" title="Серия из 3">
+      <span>🔥</span>
+      <div class="badge-tooltip">На огне: 3 правильных подряд</div>
+    </div>
+    <div class="badge locked" data-badge="streak-5" title="Серия из 5">
+      <span>⚡</span>
+      <div class="badge-tooltip">Молния: 5 правильных подряд</div>
+    </div>
+    <div class="badge locked" data-badge="half-done" title="Половина пути">
+      <span>🎯</span>
+      <div class="badge-tooltip">Половина пути: 20 карточек</div>
+    </div>
+    <div class="badge locked" data-badge="perfectionist" title="Перфекционист">
+      <span>💎</span>
+      <div class="badge-tooltip">Перфекционист: 10 правильных подряд</div>
+    </div>
+    <div class="badge locked" data-badge="master" title="Мастер">
+      <span>🏆</span>
+      <div class="badge-tooltip">Мастер: все карточки изучены</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showSection('flashcards', event)">
+      <span class="tab-emoji">🃏</span>
+      <span>Карточки</span>
+    </button>
+    <button class="tab-btn" onclick="showSection('quiz', event)">
+      <span class="tab-emoji">🧠</span>
+      <span>Тест</span>
+    </button>
+    <button class="tab-btn" onclick="showSection('matching', event)">
+      <span class="tab-emoji">🔗</span>
+      <span>Сопоставление</span>
+    </button>
+    <button class="tab-btn" onclick="showSection('fillin', event)">
+      <span class="tab-emoji">✏️</span>
+      <span>Пропуски</span>
+    </button>
+    <button class="tab-btn" onclick="showSection('grammar', event)">
+      <span class="tab-emoji">📐</span>
+      <span>Грамматика</span>
+    </button>
+  </div>
+
+  <!-- FLASHCARDS -->
+  <div class="section active" id="sec-flashcards">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-emoji">🃏</div>
+        <div>
+          <div class="card-title">Флеш-карточки</div>
+          <div class="card-subtitle">Нажми на карточку, чтобы увидеть перевод и пример</div>
+        </div>
+      </div>
+
+      <div class="flashcard-wrapper">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+          <div class="flashcard-face flashcard-front">
+            <div class="fc-emoji" id="fcEmoji">🎭</div>
+            <div class="fc-word" id="fcFrontText">cringe-worthy</div>
+            <div class="fc-hint">нажми, чтобы перевернуть ↓</div>
+          </div>
+          <div class="flashcard-face flashcard-back">
+            <div class="fc-translation" id="fcBackText">вызывающий неловкость</div>
+            <div class="fc-example" id="fcExample">"a cringe-worthy interview"</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-counter" id="cardCounter">1 / 45</div>
+      
+      <div class="flashcard-nav">
+        <button class="nav-btn" onclick="prevCard()">← Назад</button>
+        <button class="nav-btn primary" onclick="nextCard()">Далее →</button>
+      </div>
+
+      <div class="keyboard-hint">
+        Используй <span class="key">←</span> <span class="key">→</span> для навигации · <span class="key">Space</span> для переворота
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="section" id="sec-quiz">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-emoji">🧠</div>
+        <div>
+          <div class="card-title">Проверь себя</div>
+          <div class="card-subtitle">Выбери правильный перевод или значение</div>
+        </div>
+      </div>
+      <div class="quiz-progress" id="quizProgress"></div>
+      <div id="quizArea"></div>
+    </div>
+  </div>
+
+  <!-- MATCHING -->
+  <div class="section" id="sec-matching">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-emoji">🔗</div>
+        <div>
+          <div class="card-title">Сопоставь пары</div>
+          <div class="card-subtitle">Соедини английские выражения с русскими переводами</div>
+        </div>
+      </div>
+      <div class="match-instruction">Нажми на элемент слева, затем на соответствующий справа</div>
+      <div class="match-container" id="matchArea"></div>
+      <div style="text-align:center;margin-top:24px">
+        <button class="check-btn" onclick="initMatching()">🔄 Новая игра</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILL IN -->
+  <div class="section" id="sec-fillin">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-emoji">✏️</div>
+        <div>
+          <div class="card-title">Вставь пропущенное слово</div>
+          <div class="card-subtitle">Заполни пропуски в предложениях из текста</div>
+        </div>
+      </div>
+      <div id="fillArea"></div>
+    </div>
+  </div>
+
+  <!-- GRAMMAR -->
+  <div class="section" id="sec-grammar">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-emoji">📐</div>
+        <div>
+          <div class="card-title">Грамматические конструкции</div>
+          <div class="card-subtitle">Продвинутые структуры из текста с примерами</div>
+        </div>
+      </div>
+      <div id="grammarArea"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ DATA ============
+const vocabulary = [
+  { en: "mess up", ru: "облажаться, накосячить", ex: "Have you messed up recently?", emoji: "💥" },
+  { en: "cringe-worthy", ru: "вызывающий неловкость, стыдный", ex: "a cringe-worthy interview", emoji: "😬" },
+  { en: "pat someone on the back", ru: "похлопать по плечу (утешить)", ex: "Did friends pat you on the back?", emoji: "🤗" },
+  { en: "reassuringly murmur", ru: "успокаивающе бормотать", ex: "reassuringly murmur, 'Let it go'", emoji: "🗣️" },
+  { en: "let it go", ru: "отпустить, забыть об этом", ex: "Let it go, don't worry about it", emoji: "🍃" },
+  { en: "be resilient", ru: "быть стойким, устойчивым", ex: "Be 'resilient'", emoji: "💪" },
+  { en: "learning curve", ru: "кривая обучения", ex: "it's all part of the learning curve", emoji: "📈" },
+  { en: "be on board with", ru: "соглашаться с чем-то", ex: "are you on board with this?", emoji: "🤝" },
+  { en: "overly simplistic", ru: "чрезмерно упрощённый", ex: "comments like these are overly simplistic", emoji: "🎯" },
+  { en: "in light of this", ru: "в свете этого, учитывая", ex: "In light of this, we asked...", emoji: "💡" },
+  { en: "put your heart and soul into", ru: "вложить душу во что-то", ex: "If you put your heart and soul into something", emoji: "❤️" },
+  { en: "make strides", ru: "делать успехи, продвигаться", ex: "we are going to make strides", emoji: "🚀" },
+  { en: "going forward", ru: "в дальнейшем, в будущем", ex: "going forward in every aspect", emoji: "⏩" },
+  { en: "pursue a career", ru: "строить карьеру", ex: "pursuing a career", emoji: "💼" },
+  { en: "contrast dramatically", ru: "резко контрастировать", ex: "contrast dramatically with the way", emoji: "⚡" },
+  { en: "change tack", ru: "сменить курс, тактику", ex: "perhaps change tack", emoji: "🧭" },
+  { en: "be spot on", ru: "быть абсолютно точным", ex: "the idea is spot on", emoji: "🎯" },
+  { en: "rings true", ru: "звучит правдоподобно", ex: "It definitely rings true", emoji: "🔔" },
+  { en: "strike a chord with", ru: "найти отклик, задеть за живое", ex: "Something struck a chord with me", emoji: "🎵" },
+  { en: "get one's fair share of", ru: "получить сполна (негативного)", ex: "managers get their fair share of criticism", emoji: "📦" },
+  { en: "throw in the towel", ru: "сдаться, капитулировать", ex: "he would have thrown in the towel", emoji: "🏳️" },
+  { en: "see where someone is coming from", ru: "понимать чью-либо точку зрения", ex: "I could see where he was coming from", emoji: "👁️" },
+  { en: "be conditioned to", ru: "быть приученным к", ex: "we have been conditioned to accept", emoji: "🧠" },
+  { en: "self-centred creatures", ru: "эгоцентричные существа", ex: "inherently self-centred creatures", emoji: "🪞" },
+  { en: "galling", ru: "оскорбительный, обидный", ex: "the feeling of failure can be galling", emoji: "😤" },
+  { en: "to a certain extent", ru: "до определённой степени", ex: "at least to a certain extent", emoji: "📏" },
+  { en: "fly in the face of", ru: "идти вразрез с", ex: "flying in the face of popular opinion", emoji: "🌪️" },
+  { en: "go along with", ru: "соглашаться, поддерживать", ex: "cannot go along with the belief", emoji: "🤝" },
+  { en: "dwell on", ru: "зацикливаться на", ex: "we shouldn't dwell on failure", emoji: "🔄" },
+  { en: "get hung up about", ru: "застрять на, зациклиться", ex: "get hung up about all our mistakes", emoji: "🧩" },
+  { en: "have what it takes", ru: "иметь необходимые качества", ex: "don't have what it takes", emoji: "⭐" },
+  { en: "it bugs me", ru: "меня это бесит", ex: "It bugs me when I hear...", emoji: "🐛" },
+  { en: "patently not true", ru: "явно неверно", ex: "It is patently not true", emoji: "❌" },
+  { en: "give it a good go", ru: "хорошенько попытаться", ex: "Give it a good go", emoji: "👊" },
+  { en: "be cut out to be", ru: "быть созданным для роли", ex: "I wasn't cut out to be a crime writer", emoji: "✂️" },
+  { en: "get real about", ru: "взглянуть реалистично на", ex: "We need to get real about failure", emoji: "🎯" },
+  { en: "vacuous comments", ru: "пустые комментарии", ex: "all these vacuous comments", emoji: "💭" },
+  { en: "sweeping statements", ru: "обобщающие утверждения", ex: "sweeping statements on social media", emoji: "🧹" },
+  { en: "lose it", ru: "выйти из себя, взорваться", ex: "I'm going to lose it", emoji: "🤯" },
+  { en: "trite phrases", ru: "избитые фразы, клише", ex: "They trot out these trite phrases", emoji: "📜" },
+  { en: "trot out", ru: "выдавать (избитые фразы)", ex: "trot out these trite phrases", emoji: "🐎" },
+  { en: "complete fallacies", ru: "полные заблуждения", ex: "actually wrong, complete fallacies", emoji: "🎭" },
+  { en: "dire consequences", ru: "ужасные последствия", ex: "It can have dire consequences", emoji: "⚠️" },
+  { en: "knock one's confidence", ru: "подорвать уверенность", ex: "knock your confidence", emoji: "🥊" },
+  { en: "rob someone of", ru: "лишить кого-то чего-то", ex: "rob you of a job", emoji: "💰" },
+];
+
+const quizData = [
+  { q: "Что означает <b>\"cringe-worthy\"</b>?", options: ["вдохновляющий", "вызывающий неловкость", "захватывающий", "убедительный"], correct: 1, explanation: "Cringe-worthy = вызывающий чувство стыда или неловкости" },
+  { q: "\"Throw in the towel\" означает:", options: ["начать тренировку", "сдаться, капитулировать", "выиграть бой", "полотенце для спортзала"], correct: 1, explanation: "Идиома из бокса: тренер бросает полотенце в ринг" },
+  { q: "Что значит <b>\"fly in the face of\"</b>?", options: ["летать напротив", "идти вразрез с", "столкнуться лицом к лицу", "быть честным"], correct: 1, explanation: "Fly in the face of = действовать вопреки чему-то" },
+  { q: "\"It bugs me\" — это:", options: ["Это меня вдохновляет", "Это меня бесит", "Это меня удивляет", "Это меня радует"], correct: 1, explanation: "Bug (глагол) = раздражать, досаждать" },
+  { q: "Что такое <b>\"vacuous comments\"</b>?", options: ["важные комментарии", "пустые комментарии", "критические замечания", "полезные советы"], correct: 1, explanation: "Vacuous = пустой, бессодержательный" },
+  { q: "\"Be cut out to be\" означает:", options: ["быть вырезанным", "быть созданным для роли", "быть исключённым", "быть готовым"], correct: 1, explanation: "Be cut out for/to be = иметь природные способности" },
+  { q: "Что значит <b>\"make strides\"</b>?", options: ["делать большие шаги", "делать успехи", "отступать", "падать"], correct: 1, explanation: "Make strides = добиваться значительного прогресса" },
+  { q: "\"Sweeping statements\" — это:", options: ["уборочные заявления", "обобщающие утверждения", "точные факты", "личные мнения"], correct: 1, explanation: "Sweeping = обобщающий, охватывающий всё" },
+  { q: "Что означает <b>\"galling\"</b>?", options: ["радостный", "оскорбительный, неприятный", "удивительный", "смешной"], correct: 1, explanation: "Galling = вызывающий раздражение и досаду" },
+  { q: "\"Strike a chord with someone\" значит:", options: ["ударить по аккорду", "найти отклик", "сыграть музыку", "поссориться"], correct: 1, explanation: "Музыкальная метафора: звучит в унисон с чувствами" },
+  { q: "Что значит <b>\"dwell on\"</b>?", options: ["жить в", "зацикливаться на", "забывать о", "игнорировать"], correct: 1, explanation: "Dwell on = долго и навязчиво думать о чём-то" },
+  { q: "\"Dire consequences\" — это:", options: ["прямые последствия", "ужасные последствия", "незначительные результаты", "положительные итоги"], correct: 1, explanation: "Dire = крайне серьёзный, ужасный" },
+  { q: "Что означает <b>\"in light of this\"</b>?", options: ["при ярком свете", "в свете этого", "в тени этого", "несмотря на это"], correct: 1, explanation: "In light of = учитывая, принимая во внимание" },
+  { q: "\"See where someone is coming from\" означает:", options: ["видеть, откуда идёт", "понимать точку зрения", "следить за кем-то", "встречать"], correct: 1, explanation: "Идиома: понимать логику собеседника" },
+  { q: "Что значит <b>\"be spot on\"</b>?", options: ["быть грязным", "быть абсолютно точным", "быть на месте", "иметь пятна"], correct: 1, explanation: "Spot on = точно в цель, совершенно верно" },
+  { q: "\"Have what it takes\" означает:", options: ["брать то, что дают", "иметь необходимые качества", "забирать своё", "требовать многого"], correct: 1, explanation: "Иметь талант или ресурсы для достижения цели" },
+  { q: "Что такое <b>\"complete fallacies\"</b>?", options: ["полные заблуждения", "завершённые проекты", "абсолютная правда", "сложные задачи"], correct: 0, explanation: "Fallacy = ложное умозаключение, заблуждение" },
+  { q: "\"Go along with something\" значит:", options: ["идти вместе с кем-то", "соглашаться с идеей", "уходить с чем-то", "продолжать путь"], correct: 1, explanation: "Go along with = соглашаться с планом/мнением" },
+];
+
+const fillInData = [
+  { sentence: "If you put your ______ and soul into something, you don't want to be told it isn't good enough.", answer: "heart", hint: "вложить душу" },
+  { sentence: "We are constantly being told failure can actually be a ______.", answer: "positive", hint: "позитив, нечто хорошее" },
+  { sentence: "Comments like these are overly ______.", answer: "simplistic", hint: "упрощённый" },
+  { sentence: "In ______ of this, we asked four of our reporters how they feel.", answer: "light", hint: "в свете этого (идиома)" },
+  { sentence: "We are going to make strides going ______ in every aspect of our lives.", answer: "forward", hint: "в дальнейшем" },
+  { sentence: "If it hadn't been for his love of the game, he would have ______ in the towel.", answer: "thrown", hint: "сдаться (идиома)" },
+  { sentence: "I could see where he was coming ______, and I started to analyse my own reactions.", answer: "from", hint: "понимать точку зрения" },
+  { sentence: "Human beings are inherently ______ creatures: we like to be liked.", answer: "self-centred", hint: "эгоцентричный" },
+  { sentence: "I might be flying in the ______ of popular opinion.", answer: "face", hint: "идти вразрез" },
+  { sentence: "I simply cannot go ______ with the fashionable belief that failing is good.", answer: "along", hint: "соглашаться с" },
+  { sentence: "The old saying — try, try try ______ — assumes persistence will help.", answer: "again", hint: "пословица о настойчивости" },
+  { sentence: "Give up if you clearly don't have what it ______.", answer: "takes", hint: "иметь то, что нужно" },
+  { sentence: "It is ______ not true that anyone can do anything.", answer: "patently", hint: "явно, очевидно" },
+  { sentence: "I simply cannot stand all these ______ comments on social media.", answer: "vacuous", hint: "пустые, бессодержательные" },
+  { sentence: "We'd probably find some that are often actually wrong, complete ______.", answer: "fallacies", hint: "заблуждения" },
+  { sentence: "Failure can have ______ consequences: knock your confidence, rob you of a job.", answer: "dire", hint: "серьёзные, ужасные" },
+  { sentence: "Something struck a ______ with me the other day.", answer: "chord", hint: "найти отклик" },
+  { sentence: "So, for me the idea is spot ______.", answer: "on", hint: "абсолютно точный" },
+  { sentence: "We need to get ______ about failure and think about what it's really telling us.", answer: "real", hint: "взглянуть реалистично" },
+];
+
+const grammarData = [
+  { rule: "Third Conditional", formula: "If + Past Perfect, ... would have + V3", example: "If it hadn't been for his love of the game, he would have thrown in the towel.", translation: "Если бы не его любовь к игре, он бы давно сдался.", note: "Нереальное условие в прошлом: сожаление о том, чего не случилось." },
+  { rule: "Инверсия с Had", formula: "Had + subject + V3 = If + subject + had + V3", example: "Had I not accepted that I wasn't cut out to be a crime writer, I wouldn't be enjoying the rewards now.", translation: "Если бы я не смирился с тем, что не создан быть писателем, я бы сейчас не наслаждался работой.", note: "Формальная инверсия заменяет 'if' и делает речь литературной." },
+  { rule: "Инверсия с Were", formula: "Were + subject + to + V1 = If + subject + were to + V1", example: "...were we to analyse them, we'd probably find some that are actually wrong.", translation: "...если бы мы взялись проанализировать их, мы бы, вероятно, обнаружили ошибки.", note: "Гипотетическое условие 2-го типа в настоящем/будущем." },
+  { rule: "Инверсия с Should", formula: "Should + subject + V1 = If + subject + should + V1", example: "...anyone can do anything, should they want it hard enough.", translation: "...любой может добиться чего угодно, если вдруг этого сильно захочет.", note: "Условие 1-го типа с оттенком меньшей вероятности." },
+  { rule: "Конструкция 'But for'", formula: "But for + Noun, ... would have + V3", example: "But for the intervention of my son's drama teacher, he would never have risked going into acting.", translation: "Если бы не вмешательство учителя драмы, он бы никогда не рискнул стать актёром.", note: "Заменяет 'If it hadn't been for...' в 3-м типе." },
+  { rule: "Mixed Conditional", formula: "If + Past Perfect (прошлое) → would + V (настоящее)", example: "Had I not accepted... I wouldn't be enjoying the rewards... now.", translation: "Прошлое действие влияет на настоящее.", note: "Смешение Third и Second Conditional." },
+  { rule: "Уступительные обороты с 'However'", formula: "However + adj/adv + subject + verb", example: "...however hard you try, however often you fail, you are not going to succeed...", translation: "...как бы сильно ты ни старался, как бы часто ни терпел неудачу...", note: "Выражает уступку: 'каким бы... ни было'." },
+  { rule: "Absolute Participle Clause", formula: "Noun + Participle (V-ing/V3)", example: "I started to analyse my own reactions, self-reflection being very on trend at the moment!", translation: "...я начал анализировать реакции, (так как) саморефлексия сейчас в тренде!", note: "Причастие со своим подлежащим, заменяет придаточное причины." },
+  { rule: "Passive Voice (Present Perfect)", formula: "have/has been + V3", example: "We have been conditioned to accept criticism.", translation: "Нас приучили принимать критику.", note: "Акцент на результате, а не на том, кто совершил действие." },
+  { rule: "Passive (Present Continuous)", formula: "am/is/are + being + V3", example: "We are constantly being told failure can actually be a positive.", translation: "Нам постоянно твердят, что неудача может быть плюсом.", note: "Подчёркивает регулярность и навязчивость действия." },
+  { rule: "Gerund после предлогов", formula: "preposition + V-ing", example: "from learning at school, pursuing a career – even in relationships", translation: "от обучения в школе, построения карьеры — даже в отношениях", note: "После предлогов всегда герундий, не инфинитив." },
+  { rule: "Would have + V3", formula: "subject + would have + V3", example: "he would have thrown in the towel early on", translation: "он бы сдался в самом начале", note: "Нереальный результат в прошлом (главная часть 3-го типа)." },
+  { rule: "Эмфатическое 'It'", formula: "It is [adj] that...", example: "It is patently not true.", translation: "Это явно неверно.", note: "Усиливает утверждение. Patently = очевидно." },
+  { rule: "Be conditioned to + V", formula: "be conditioned to + V (base form)", example: "we have been conditioned to accept criticism", translation: "нас приучили принимать критику", note: "Психологический термин: обусловленность, привычка." },
+  { rule: "Эмфатическое 'I, for one'", formula: "I, for one, + statement", example: "I, for one, simply cannot stand all these vacuous comments.", translation: "Что касается меня, то я просто терпеть не могу эти комментарии.", note: "Выделяет собственное мнение на фоне толпы." },
+];
+
+// ============ STATE ============
+let currentCard = 0;
+let quizIndex = 0;
+let quizCorrect = 0;
+let streak = 0;
+let totalAttempts = 0;
+let totalCorrect = 0;
+let learnedSet = new Set();
+let matchLeft = null;
+let fillIndex = 0;
+let quizHistory = [];
+
+const unlockedBadges = new Set();
+
+// ============ CONFETTI ============
+const confettiCanvas = document.getElementById('confetti-canvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+let confettiParticles = [];
+let confettiActive = false;
+
+function resizeConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+resizeConfetti();
+window.addEventListener('resize', resizeConfetti);
+
+function launchConfetti() {
+  confettiParticles = [];
+  const colors = ['#FF6B6B', '#4ECDC4', '#FFD93D', '#A78BFA', '#F472B6'];
+  for (let i = 0; i < 100; i++) {
+    confettiParticles.push({
+      x: Math.random() * confettiCanvas.width,
+      y: -20,
+      vx: (Math.random() - 0.5) * 8,
+      vy: Math.random() * 4 + 2,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 10,
+      gravity: 0.2,
+    });
+  }
+  confettiActive = true;
+  animateConfetti();
+}
+
+function animateConfetti() {
+  if (!confettiActive) return;
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  
+  let alive = false;
+  confettiParticles.forEach(p => {
+    p.x += p.vx;
+    p.vy += p.gravity;
+    p.y += p.vy;
+    p.rotation += p.rotationSpeed;
+    
+    if (p.y < confettiCanvas.height + 50) {
+      alive = true;
+      confettiCtx.save();
+      confettiCtx.translate(p.x, p.y);
+      confettiCtx.rotate(p.rotation * Math.PI / 180);
+      confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      confettiCtx.restore();
+    }
+  });
+  
+  if (alive) requestAnimationFrame(animateConfetti);
+  else confettiActive = false;
+}
+
+// ============ TOAST ============
+function showToast(text, emoji = '🎉') {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = text;
+  toast.querySelector('.toast-emoji').textContent = emoji;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ============ ACHIEVEMENTS ============
+function checkAchievements() {
+  const badgeChecks = [
+    { id: 'first-steps', condition: () => learnedSet.size >= 5, text: 'Первые шаги: 5 карточек изучено!' },
+    { id: 'streak-3', condition: () => streak >= 3, text: 'Серия из 3 правильных подряд!' },
+    { id: 'streak-5', condition: () => streak >= 5, text: 'Серия из 5! Ты в ударе!' },
+    { id: 'half-done', condition: () => learnedSet.size >= 20, text: 'Половина пути пройдена!' },
+    { id: 'perfectionist', condition: () => streak >= 10, text: 'Перфекционист: 10 правильных подряд!' },
+    { id: 'master', condition: () => learnedSet.size >= vocabulary.length, text: '🏆 Мастер: все слова изучены!' },
+  ];
+  
+  badgeChecks.forEach(b => {
+    if (!unlockedBadges.has(b.id) && b.condition()) {
+      unlockBadge(b.id, b.text);
+    }
+  });
+}
+
+function unlockBadge(id, text) {
+  unlockedBadges.add(id);
+  const badge = document.querySelector(`[data-badge="${id}"]`);
+  if (badge) {
+    badge.classList.remove('locked');
+    badge.classList.add('unlocked');
+    showToast(text, '🏆');
+    launchConfetti();
+  }
+}
+
+// ============ TABS ============
+function showSection(id, e) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  if (e && e.target) {
+    const btn = e.target.closest('.tab-btn');
+    if (btn) btn.classList.add('active');
+  }
+  if (id === 'quiz') initQuiz();
+  if (id === 'matching') initMatching();
+  if (id === 'fillin') initFillIn();
+  if (id === 'grammar') initGrammar();
+}
+
+// ============ FLASHCARDS ============
+function updateCard() {
+  const v = vocabulary[currentCard];
+  document.getElementById('fcEmoji').textContent = v.emoji;
+  document.getElementById('fcFrontText').textContent = v.en;
+  document.getElementById('fcBackText').textContent = v.ru;
+  document.getElementById('fcExample').textContent = '"' + v.ex + '"';
+  document.getElementById('cardCounter').textContent = (currentCard + 1) + ' / ' + vocabulary.length;
+  document.getElementById('flashcard').classList.remove('flipped');
+  learnedSet.add(currentCard);
+  updateStats();
+  checkAchievements();
+}
+
+function flipCard() {
+  document.getElementById('flashcard').classList.toggle('flipped');
+}
+
+function nextCard() {
+  currentCard = (currentCard + 1) % vocabulary.length;
+  updateCard();
+}
+
+function prevCard() {
+  currentCard = (currentCard - 1 + vocabulary.length) % vocabulary.length;
+  updateCard();
+}
+
+// ============ QUIZ ============
+function initQuiz() {
+  quizIndex = 0;
+  quizCorrect = 0;
+  quizHistory = [];
+  renderQuizProgress();
+  showQuizQuestion();
+}
+
+function renderQuizProgress() {
+  const container = document.getElementById('quizProgress');
+  container.innerHTML = '';
+  for (let i = 0; i < quizData.length; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'quiz-dot';
+    if (i === quizIndex) dot.classList.add('active');
+    if (quizHistory[i] === 'correct') dot.classList.add('correct');
+    if (quizHistory[i] === 'wrong') dot.classList.add('wrong');
+    container.appendChild(dot);
+  }
+}
+
+function showQuizQuestion() {
+  const area = document.getElementById('quizArea');
+  if (quizIndex >= quizData.length) {
+    const pct = Math.round((quizCorrect / quizData.length) * 100);
+    let emoji = '😅';
+    if (pct >= 90) emoji = '🏆';
+    else if (pct >= 70) emoji = '🎉';
+    else if (pct >= 50) emoji = '👍';
+    area.innerHTML = `
+      <div class="quiz-score">
+        <span class="quiz-score-emoji">${emoji}</span>
+        <div class="quiz-score-num">${quizCorrect} / ${quizData.length}</div>
+        <div style="color:var(--text-secondary);margin-bottom:24px">${pct}% правильных ответов</div>
+        <button class="check-btn" onclick="initQuiz()">🔄 Пройти снова</button>
+      </div>
+    `;
+    if (pct >= 70) launchConfetti();
+    return;
+  }
+  const q = quizData[quizIndex];
+  const letters = ['A', 'B', 'C', 'D'];
+  let html = `<div class="quiz-question">${q.q}</div><div class="quiz-options">`;
+  q.options.forEach((opt, i) => {
+    html += `<button class="quiz-option" onclick="checkQuiz(${i})">
+      <span class="option-letter">${letters[i]}</span>
+      <span>${opt}</span>
+    </button>`;
+  });
+  html += `</div>
+    <div class="quiz-feedback" id="quizFeedback"></div>
+    <button class="quiz-next-btn" id="quizNextBtn" onclick="nextQuizQuestion()">Следующий вопрос →</button>`;
+  area.innerHTML = html;
+  renderQuizProgress();
+}
+
+function checkQuiz(idx) {
+  const q = quizData[quizIndex];
+  const opts = document.querySelectorAll('.quiz-option');
+  opts.forEach(o => o.classList.add('disabled'));
+  opts[idx].classList.add(idx === q.correct ? 'correct' : 'wrong');
+  if (idx !== q.correct) opts[q.correct].classList.add('correct');
+
+  const fb = document.getElementById('quizFeedback');
+  fb.className = 'quiz-feedback show ' + (idx === q.correct ? 'correct-fb' : 'wrong-fb');
+  fb.innerHTML = (idx === q.correct ? '✅ Верно! ' : '❌ Неверно. ') + q.explanation;
+
+  document.getElementById('quizNextBtn').classList.add('show');
+  totalAttempts++;
+  
+  if (idx === q.correct) {
+    totalCorrect++;
+    quizCorrect++;
+    streak++;
+    quizHistory[quizIndex] = 'correct';
+  } else {
+    streak = 0;
+    quizHistory[quizIndex] = 'wrong';
+  }
+  
+  updateStats();
+  checkAchievements();
+  renderQuizProgress();
+}
+
+function nextQuizQuestion() {
+  quizIndex++;
+  showQuizQuestion();
+}
+
+// ============ MATCHING ============
+function initMatching() {
+  matchLeft = null;
+  const shuffled = [...vocabulary].sort(() => Math.random() - 0.5).slice(0, 6);
+  const leftItems = shuffled.map((v, i) => ({ text: v.emoji + ' ' + v.en, pair: i }));
+  const rightItems = shuffled.map((v, i) => ({ text: v.ru, pair: i }));
+  rightItems.sort(() => Math.random() - 0.5);
+
+  let html = '<div class="match-col"><h4>English</h4>';
+  leftItems.forEach((item, i) => {
+    html += `<div class="match-item" data-side="left" data-pair="${item.pair}" onclick="matchClick(this)">${item.text}</div>`;
+  });
+  html += '</div><div class="match-col"><h4>Русский</h4>';
+  rightItems.forEach((item, i) => {
+    html += `<div class="match-item" data-side="right" data-pair="${item.pair}" onclick="matchClick(this)">${item.text}</div>`;
+  });
+  html += '</div>';
+  document.getElementById('matchArea').innerHTML = html;
+}
+
+function matchClick(el) {
+  if (el.classList.contains('matched')) return;
+  const side = el.dataset.side;
+  const pair = el.dataset.pair;
+
+  if (!matchLeft) {
+    document.querySelectorAll('.match-item.selected').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    matchLeft = { el, side, pair };
+  } else {
+    if (matchLeft.side === side) {
+      matchLeft.el.classList.remove('selected');
+      el.classList.add('selected');
+      matchLeft = { el, side, pair };
+      return;
+    }
+    totalAttempts++;
+    if (matchLeft.pair === pair) {
+      matchLeft.el.classList.remove('selected');
+      matchLeft.el.classList.add('matched');
+      el.classList.add('matched');
+      totalCorrect++;
+      streak++;
+    } else {
+      el.classList.add('wrong-match');
+      matchLeft.el.classList.add('wrong-match');
+      streak = 0;
+      setTimeout(() => {
+        el.classList.remove('wrong-match');
+        matchLeft.el.classList.remove('wrong-match', 'selected');
+      }, 600);
+    }
+    updateStats();
+    checkAchievements();
+    matchLeft = null;
+  }
+}
+
+// ============ FILL IN ============
+function initFillIn() {
+  fillIndex = 0;
+  showFillQuestion();
+}
+
+function showFillQuestion() {
+  const area = document.getElementById('fillArea');
+  if (fillIndex >= fillInData.length) {
+    area.innerHTML = `
+      <div class="quiz-score">
+        <span class="quiz-score-emoji">🎓</span>
+        <div class="quiz-score-num">Готово!</div>
+        <div style="color:var(--text-secondary);margin-bottom:24px">Все пропуски заполнены</div>
+        <button class="check-btn" onclick="initFillIn()">🔄 Пройти снова</button>
+      </div>
+    `;
+    launchConfetti();
+    return;
+  }
+  const f = fillInData[fillIndex];
+  const sentenceWithBlank = f.sentence.replace('______', '<input class="fill-input" id="fillInput" placeholder="..." autocomplete="off">');
+  area.innerHTML = `
+    <div class="fill-sentence">${sentenceWithBlank}</div>
+    <div class="fill-hint">💡 Подсказка: ${f.hint}</div>
+    <button class="check-btn" onclick="checkFill()">Проверить</button>
+    <div class="quiz-feedback" id="fillFeedback"></div>
+    <button class="quiz-next-btn" id="fillNextBtn" onclick="nextFill()">Следующее →</button>
+  `;
+  setTimeout(() => {
+    const input = document.getElementById('fillInput');
+    if (input) {
+      input.focus();
+      input.addEventListener('keypress', e => {
+        if (e.key === 'Enter') checkFill();
+      });
+    }
+  }, 100);
+}
+
+function checkFill() {
+  const f = fillInData[fillIndex];
+  const input = document.getElementById('fillInput');
+  if (!input || input.disabled) return;
+  const val = input.value.trim().toLowerCase();
+  const correct = f.answer.toLowerCase();
+  const fb = document.getElementById('fillFeedback');
+
+  totalAttempts++;
+  if (val === correct) {
+    input.classList.add('correct-input');
+    fb.className = 'quiz-feedback show correct-fb';
+    fb.innerHTML = '✅ Верно!';
+    totalCorrect++;
+    streak++;
+  } else {
+    input.classList.add('wrong-input');
+    fb.className = 'quiz-feedback show wrong-fb';
+    fb.innerHTML = `❌ Неверно. Правильный ответ: <b>${f.answer}</b>`;
+    streak = 0;
+  }
+  input.disabled = true;
+  document.getElementById('fillNextBtn').classList.add('show');
+  updateStats();
+  checkAchievements();
+}
+
+function nextFill() {
+  fillIndex++;
+  showFillQuestion();
+}
+
+// ============ GRAMMAR ============
+function initGrammar() {
+  const area = document.getElementById('grammarArea');
+  let html = '';
+  grammarData.forEach(g => {
+    html += `
+      <div class="grammar-card">
+        <div class="rule">📌 ${g.rule}</div>
+        <div class="formula">${g.formula}</div>
+        <div class="example">"${g.example}"</div>
+        <div class="translation">${g.translation}</div>
+        <div class="note">💡 ${g.note}</div>
+      </div>
+    `;
+  });
+  area.innerHTML = html;
+}
+
+// ============ STATS ============
+function updateStats() {
+  document.getElementById('statLearned').textContent = learnedSet.size;
+  document.getElementById('statCorrect').textContent = totalCorrect;
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statTotal').textContent = totalAttempts;
+}
+
+// ============ KEYBOARD NAVIGATION ============
+document.addEventListener('keydown', e => {
+  const activeSection = document.querySelector('.section.active').id;
+  
+  if (activeSection === 'sec-flashcards') {
+    if (e.key === 'ArrowRight') nextCard();
+    else if (e.key === 'ArrowLeft') prevCard();
+    else if (e.key === ' ') { e.preventDefault(); flipCard(); }
+  }
+});
+
+// ============ INIT ============
+updateCard();
+updateStats();
+initMatching();
+</script>
+</body>
+</html>
