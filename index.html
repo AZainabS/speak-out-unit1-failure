@@ -240,6 +240,7 @@
     pointer-events: none;
     transition: opacity 0.2s;
     border: 1px solid var(--glass-border);
+    z-index: 5;
   }
 
   .badge:hover .badge-tooltip { opacity: 1; }
@@ -350,7 +351,7 @@
 
   .flashcard {
     width: 100%;
-    height: 360px;
+    height: 400px;
     position: relative;
     transform-style: preserve-3d;
     transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
@@ -375,7 +376,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 32px;
+    padding: 36px 32px;
     text-align: center;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     overflow-y: auto;
@@ -411,7 +412,7 @@
   }
 
   .fc-word {
-    font-size: 2.2em;
+    font-size: 2.1em;
     font-weight: 800;
     letter-spacing: -0.02em;
     margin-bottom: 12px;
@@ -432,26 +433,65 @@
     transform: rotateY(180deg);
     border: 1px solid var(--glass-border);
     z-index: 1;
+    justify-content: flex-start;
+    padding-top: 28px;
   }
 
   .fc-translation {
     font-size: 1.5em;
     font-weight: 700;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     color: var(--accent-cyan);
   }
 
   .fc-example {
-    font-size: 0.95em;
+    font-size: 0.92em;
     color: var(--text-secondary);
     font-style: italic;
-    line-height: 1.6;
-    padding: 16px;
+    line-height: 1.55;
+    padding: 12px 16px;
     background: rgba(0,0,0,0.2);
     border-radius: 12px;
     border-left: 3px solid var(--accent-cyan);
     max-width: 100%;
   }
+
+  .fc-synant {
+    margin-top: 16px;
+    width: 100%;
+    text-align: left;
+    font-size: 0.82em;
+  }
+
+  .syn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .tag {
+    font-size: 0.85em;
+    padding: 3px 9px;
+    border-radius: 8px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+  }
+
+  .tag-syn { background: rgba(78,205,196,.16); color: var(--accent-cyan); border: 1px solid rgba(78,205,196,.4); }
+  .tag-ant { background: rgba(255,107,107,.16); color: var(--accent-coral); border: 1px solid rgba(255,107,107,.4); }
+
+  .chip {
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 3px 9px;
+    color: var(--text-primary);
+  }
+
+  .chip b { color: var(--accent-gold); font-weight: 600; }
 
   .card-counter {
     text-align: center;
@@ -747,7 +787,7 @@
     color: var(--text-primary);
     font-size: 1em;
     font-weight: 600;
-    width: 200px;
+    width: 240px;
     transition: all 0.3s;
     font-family: inherit;
   }
@@ -914,9 +954,10 @@
     .match-container { grid-template-columns: 1fr; }
     .container { padding: 24px 16px; }
     .card { padding: 24px 20px; }
-    .flashcard { height: 320px; }
-    .fc-word { font-size: 1.7em; }
+    .flashcard { height: 380px; }
+    .fc-word { font-size: 1.6em; }
     .quiz-option { padding: 14px 18px; }
+    .fill-input { width: 100%; }
   }
 
   /* Scrollbar */
@@ -948,7 +989,7 @@
       <span>Advanced English · B2–C1</span>
     </div>
     <h1>Is <span class="highlight">Failure</span> Good for You?</h1>
-    <p class="subtitle">Освой продвинутую лексику, идиомы и грамматические конструкции через интерактивные упражнения</p>
+    <p class="subtitle">Освой продвинутую лексику, идиомы и грамматические конструкции через интерактивные упражнения — с синонимами и антонимами</p>
   </div>
 
   <!-- STATS -->
@@ -991,7 +1032,7 @@
     </div>
     <div class="badge locked" data-badge="half-done" title="Половина пути">
       <span>🎯</span>
-      <div class="badge-tooltip">Половина пути: 20 карточек</div>
+      <div class="badge-tooltip" id="halfTooltip">Половина пути</div>
     </div>
     <div class="badge locked" data-badge="perfectionist" title="Перфекционист">
       <span>💎</span>
@@ -1025,6 +1066,14 @@
       <span class="tab-emoji">📐</span>
       <span>Грамматика</span>
     </button>
+    <button class="tab-btn" onclick="showSection('syn', event)">
+      <span class="tab-emoji">➕</span>
+      <span>Синонимы</span>
+    </button>
+    <button class="tab-btn" onclick="showSection('ant', event)">
+      <span class="tab-emoji">➖</span>
+      <span>Антонимы</span>
+    </button>
   </div>
 
   <!-- FLASHCARDS -->
@@ -1034,7 +1083,7 @@
         <div class="card-header-emoji">🃏</div>
         <div>
           <div class="card-title">Флеш-карточки</div>
-          <div class="card-subtitle">Нажми на карточку, чтобы увидеть перевод и пример</div>
+          <div class="card-subtitle">Нажми на карточку, чтобы увидеть перевод, пример, синонимы и антонимы</div>
         </div>
       </div>
 
@@ -1048,6 +1097,7 @@
           <div class="flashcard-face flashcard-back">
             <div class="fc-translation" id="fcBackText">вызывающий неловкость</div>
             <div class="fc-example" id="fcExample">"a cringe-worthy interview"</div>
+            <div class="fc-synant" id="fcSynAnt"></div>
           </div>
         </div>
       </div>
@@ -1105,7 +1155,7 @@
         <div class="card-header-emoji">✏️</div>
         <div>
           <div class="card-title">Вставь пропущенное слово</div>
-          <div class="card-subtitle">Заполни пропуски в предложениях из текста</div>
+          <div class="card-subtitle">Заполни пропуски. Если ошибёшься — увидишь правильный ответ и сможешь ввести его</div>
         </div>
       </div>
       <div id="fillArea"></div>
@@ -1126,78 +1176,238 @@
     </div>
   </div>
 
+  <!-- SYNONYMS -->
+  <div class="section" id="sec-syn">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-emoji">➕</div>
+        <div>
+          <div class="card-title">Тренируем синонимы</div>
+          <div class="card-subtitle">Подбери синоним к слову (данные Cambridge / Oxford). В комментарии — и синонимы, и антонимы</div>
+        </div>
+      </div>
+      <div class="quiz-progress" id="synProgress"></div>
+      <div id="synArea"></div>
+    </div>
+  </div>
+
+  <!-- ANTONYMS -->
+  <div class="section" id="sec-ant">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-emoji">➖</div>
+        <div>
+          <div class="card-title">Тренируем антонимы</div>
+          <div class="card-subtitle">Подбери антоним к слову (данные Cambridge / Oxford). В комментарии — и синонимы, и антонимы</div>
+        </div>
+      </div>
+      <div class="quiz-progress" id="antProgress"></div>
+      <div id="antArea"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 // ============ DATA ============
+// syn/ant sourced from Cambridge Thesaurus / Oxford Learner's Dictionaries (RU gloss added)
+const V = (en, ru, ex, emoji, syn, ant, src) => ({ en, ru, ex, emoji, syn: syn || [], ant: ant || [], src: src || "" });
+
 const vocabulary = [
-  { en: "mess up", ru: "облажаться, накосячить", ex: "Have you messed up recently?", emoji: "💥" },
-  { en: "cringe-worthy", ru: "вызывающий неловкость, стыдный", ex: "a cringe-worthy interview", emoji: "😬" },
-  { en: "pat someone on the back", ru: "похлопать по плечу (утешить)", ex: "Did friends pat you on the back?", emoji: "🤗" },
-  { en: "reassuringly murmur", ru: "успокаивающе бормотать", ex: "reassuringly murmur, 'Let it go'", emoji: "🗣️" },
-  { en: "let it go", ru: "отпустить, забыть об этом", ex: "Let it go, don't worry about it", emoji: "🍃" },
-  { en: "be resilient", ru: "быть стойким, устойчивым", ex: "Be 'resilient'", emoji: "💪" },
-  { en: "learning curve", ru: "кривая обучения", ex: "it's all part of the learning curve", emoji: "📈" },
-  { en: "be on board with", ru: "соглашаться с чем-то", ex: "are you on board with this?", emoji: "🤝" },
-  { en: "overly simplistic", ru: "чрезмерно упрощённый", ex: "comments like these are overly simplistic", emoji: "🎯" },
-  { en: "in light of this", ru: "в свете этого, учитывая", ex: "In light of this, we asked...", emoji: "💡" },
-  { en: "put your heart and soul into", ru: "вложить душу во что-то", ex: "If you put your heart and soul into something", emoji: "❤️" },
-  { en: "make strides", ru: "делать успехи, продвигаться", ex: "we are going to make strides", emoji: "🚀" },
-  { en: "going forward", ru: "в дальнейшем, в будущем", ex: "going forward in every aspect", emoji: "⏩" },
-  { en: "pursue a career", ru: "строить карьеру", ex: "pursuing a career", emoji: "💼" },
-  { en: "contrast dramatically", ru: "резко контрастировать", ex: "contrast dramatically with the way", emoji: "⚡" },
-  { en: "change tack", ru: "сменить курс, тактику", ex: "perhaps change tack", emoji: "🧭" },
-  { en: "be spot on", ru: "быть абсолютно точным", ex: "the idea is spot on", emoji: "🎯" },
-  { en: "rings true", ru: "звучит правдоподобно", ex: "It definitely rings true", emoji: "🔔" },
-  { en: "strike a chord with", ru: "найти отклик, задеть за живое", ex: "Something struck a chord with me", emoji: "🎵" },
-  { en: "get one's fair share of", ru: "получить сполна (негативного)", ex: "managers get their fair share of criticism", emoji: "📦" },
-  { en: "throw in the towel", ru: "сдаться, капитулировать", ex: "he would have thrown in the towel", emoji: "🏳️" },
-  { en: "see where someone is coming from", ru: "понимать чью-либо точку зрения", ex: "I could see where he was coming from", emoji: "👁️" },
-  { en: "be conditioned to", ru: "быть приученным к", ex: "we have been conditioned to accept", emoji: "🧠" },
-  { en: "self-centred creatures", ru: "эгоцентричные существа", ex: "inherently self-centred creatures", emoji: "🪞" },
-  { en: "galling", ru: "оскорбительный, обидный", ex: "the feeling of failure can be galling", emoji: "😤" },
-  { en: "to a certain extent", ru: "до определённой степени", ex: "at least to a certain extent", emoji: "📏" },
-  { en: "fly in the face of", ru: "идти вразрез с", ex: "flying in the face of popular opinion", emoji: "🌪️" },
-  { en: "go along with", ru: "соглашаться, поддерживать", ex: "cannot go along with the belief", emoji: "🤝" },
-  { en: "dwell on", ru: "зацикливаться на", ex: "we shouldn't dwell on failure", emoji: "🔄" },
-  { en: "get hung up about", ru: "застрять на, зациклиться", ex: "get hung up about all our mistakes", emoji: "🧩" },
-  { en: "have what it takes", ru: "иметь необходимые качества", ex: "don't have what it takes", emoji: "⭐" },
-  { en: "it bugs me", ru: "меня это бесит", ex: "It bugs me when I hear...", emoji: "🐛" },
-  { en: "patently not true", ru: "явно неверно", ex: "It is patently not true", emoji: "❌" },
-  { en: "give it a good go", ru: "хорошенько попытаться", ex: "Give it a good go", emoji: "👊" },
-  { en: "be cut out to be", ru: "быть созданным для роли", ex: "I wasn't cut out to be a crime writer", emoji: "✂️" },
-  { en: "get real about", ru: "взглянуть реалистично на", ex: "We need to get real about failure", emoji: "🎯" },
-  { en: "vacuous comments", ru: "пустые комментарии", ex: "all these vacuous comments", emoji: "💭" },
-  { en: "sweeping statements", ru: "обобщающие утверждения", ex: "sweeping statements on social media", emoji: "🧹" },
-  { en: "lose it", ru: "выйти из себя, взорваться", ex: "I'm going to lose it", emoji: "🤯" },
-  { en: "trite phrases", ru: "избитые фразы, клише", ex: "They trot out these trite phrases", emoji: "📜" },
-  { en: "trot out", ru: "выдавать (избитые фразы)", ex: "trot out these trite phrases", emoji: "🐎" },
-  { en: "complete fallacies", ru: "полные заблуждения", ex: "actually wrong, complete fallacies", emoji: "🎭" },
-  { en: "dire consequences", ru: "ужасные последствия", ex: "It can have dire consequences", emoji: "⚠️" },
-  { en: "knock one's confidence", ru: "подорвать уверенность", ex: "knock your confidence", emoji: "🥊" },
-  { en: "rob someone of", ru: "лишить кого-то чего-то", ex: "rob you of a job", emoji: "💰" },
+  V("mess up", "облажаться, накосячить", "Have you messed up recently?", "💥",
+    [{en:"bungle",ru:"запороть"},{en:"make a mistake",ru:"ошибиться"},{en:"blunder",ru:"совершить промах"}],
+    [{en:"succeed",ru:"преуспеть"},{en:"get it right",ru:"сделать правильно"}], "docx"),
+  V("cringe-worthy", "вызывающий неловкость, стыдный", "a cringe-worthy interview", "😬",
+    [{en:"embarrassing",ru:"неловкий"},{en:"awkward",ru:"неуклюжий"},{en:"shameful",ru:"постыдный"}],
+    [{en:"impressive",ru:"впечатляющий"},{en:"admirable",ru:"достойный восхищения"}], "cambridge"),
+  V("pat someone on the back", "похлопать по плечу (утешить)", "Did friends pat you on the back?", "🤗",
+    [{en:"console",ru:"утешать"},{en:"encourage",ru:"подбадривать"},{en:"comfort",ru:"успокаивать"}],
+    [{en:"criticize",ru:"критиковать"},{en:"discourage",ru:"обескураживать"}], "docx"),
+  V("reassuringly murmur", "успокаивающе бормотать", "reassuringly murmur, 'Let it go'", "🗣️",
+    [{en:"soothe",ru:"успокаивать"},{en:"whisper",ru:"шептать"}],
+    [{en:"shout",ru:"кричать"},{en:"alarm",ru:"тревожить"}], "docx"),
+  V("let it go", "отпустить, забыть об этом", "Let it go, don't worry about it", "🍃",
+    [{en:"move on",ru:"двигаться дальше"},{en:"forget about it",ru:"забыть об этом"}],
+    [{en:"dwell on",ru:"зацикливаться"},{en:"hold a grudge",ru:"держать обиду"}], "docx"),
+  V("be resilient", "быть стойким, устойчивым", "Be 'resilient'", "💪",
+    [{en:"be tough",ru:"быть выносливым"},{en:"bounce back",ru:"восстанавливаться"}],
+    [{en:"be fragile",ru:"быть хрупким"},{en:"give up",ru:"сдаваться"}], "docx"),
+  V("learning curve", "кривая обучения", "it's all part of the learning curve", "📈",
+    [{en:"learning process",ru:"процесс обучения"},{en:"adjustment period",ru:"период адаптации"}],
+    [], "docx"),
+  V("be on board with", "соглашаться с чем-то", "are you on board with this?", "🤝",
+    [{en:"agree with",ru:"соглашаться с"},{en:"support",ru:"поддерживать"}],
+    [{en:"oppose",ru:"противодействовать"},{en:"be against",ru:"быть против"}], "docx"),
+  V("overly simplistic", "чрезмерно упрощённый", "comments like these are overly simplistic", "🎯",
+    [{en:"oversimplified",ru:"чрезмерно упрощённый"},{en:"reductive",ru:"упрощающий"}],
+    [{en:"nuanced",ru:"нюансированный"},{en:"sophisticated",ru:"изощрённый"}], "docx"),
+  V("in light of this", "в свете этого, учитывая", "In light of this, we asked...", "💡",
+    [{en:"considering this",ru:"учитывая это"},{en:"given this",ru:"с учётом этого"}],
+    [], "docx"),
+  V("put your heart and soul into", "вложить душу во что-то", "If you put your heart and soul into something", "❤️",
+    [{en:"devote yourself to",ru:"посвятить себя"},{en:"give your all",ru:"выложиться полностью"}],
+    [{en:"do half-heartedly",ru:"делать спустя рукава"}], "docx"),
+  V("make strides", "делать успехи, продвигаться", "we are going to make strides", "🚀",
+    [{en:"progress",ru:"прогрессировать"},{en:"advance",ru:"продвигаться"}],
+    [{en:"stagnate",ru:"застаиваться"},{en:"fall behind",ru:"отставать"}], "docx"),
+  V("going forward", "в дальнейшем, в будущем", "going forward in every aspect", "⏩",
+    [{en:"from now on",ru:"впредь"},{en:"in future",ru:"в будущем"}],
+    [{en:"in the past",ru:"в прошлом"}], "docx"),
+  V("pursue a career", "строить карьеру", "pursuing a career", "💼",
+    [{en:"build a career",ru:"строить карьеру"},{en:"follow a career",ru:"идти по карьерной стезе"}],
+    [{en:"abandon a career",ru:"оставить карьеру"}], "docx"),
+  V("contrast dramatically", "резко контрастировать", "contrast dramatically with the way", "⚡",
+    [{en:"differ sharply",ru:"резко отличаться"},{en:"clash",ru:"контрастировать"}],
+    [{en:"match",ru:"совпадать"},{en:"resemble",ru:"походить"}], "docx"),
+  V("change tack", "сменить курс, тактику", "perhaps change tack", "🧭",
+    [{en:"change course",ru:"сменить курс"},{en:"switch approach",ru:"сменить подход"}],
+    [{en:"persist",ru:"упорствовать"},{en:"stick to",ru:"придерживаться"}], "docx"),
+  V("be spot on", "быть абсолютно точным", "the idea is spot on", "🎯",
+    [{en:"be exact",ru:"быть точным"},{en:"be right",ru:"быть правым"}],
+    [{en:"be wrong",ru:"ошибаться"},{en:"miss the mark",ru:"не попасть в цель"}], "docx"),
+  V("rings true", "звучит правдоподобно", "It definitely rings true", "🔔",
+    [{en:"sound plausible",ru:"звучать правдоподобно"},{en:"resonate",ru:"находить отклик"}],
+    [{en:"ring false",ru:"звучать фальшиво"}], "docx"),
+  V("strike a chord with", "найти отклик, задеть за живое", "Something struck a chord with me", "🎵",
+    [{en:"resonate with",ru:"находить отклик"},{en:"touch",ru:"затрагивать"}],
+    [{en:"leave cold",ru:"оставлять равнодушным"}], "docx"),
+  V("get one's fair share of", "получить сполна (негативного)", "managers get their fair share of criticism", "📦",
+    [{en:"get plenty of",ru:"получать много"},{en:"receive a lot of",ru:"получать немало"}],
+    [{en:"get none of",ru:"не получать вовсе"}], "docx"),
+  V("throw in the towel", "сдаться, капитулировать", "he would have thrown in the towel", "🏳️",
+    [{en:"give up",ru:"сдаваться"},{en:"quit",ru:"бросить"},{en:"surrender",ru:"капитулировать"}],
+    [{en:"persevere",ru:"упорствовать"},{en:"keep going",ru:"продолжать"}], "docx"),
+  V("see where someone is coming from", "понимать чью-либо точку зрения", "I could see where he was coming from", "👁️",
+    [{en:"understand someone",ru:"понимать кого-то"},{en:"get someone's point",ru:"понимать чью-то точку зрения"}],
+    [{en:"misunderstand",ru:"неправильно понимать"}], "docx"),
+  V("be conditioned to", "быть приученным к", "we have been conditioned to accept", "🧠",
+    [{en:"be trained to",ru:"быть приученным"},{en:"be accustomed to",ru:"быть привыкшим"}],
+    [{en:"be unaccustomed to",ru:"быть непривычным"}], "docx"),
+  V("self-centred creatures", "эгоцентричные существа", "inherently self-centred creatures", "🪞",
+    [{en:"egocentric beings",ru:"эгоцентричные существа"},{en:"selfish beings",ru:"эгоистичные существа"}],
+    [{en:"selfless beings",ru:"самоотверженные существа"},{en:"altruistic beings",ru:"альтруистичные существа"}], "docx"),
+  V("galling", "оскорбительный, обидный", "the feeling of failure can be galling", "😤",
+    [{en:"irritating",ru:"раздражающий"},{en:"humiliating",ru:"унизительный"},{en:"annoying",ru:"досадный"}],
+    [{en:"pleasing",ru:"приятный"},{en:"gratifying",ru:"отрадный"}], "cambridge"),
+  V("to a certain extent", "до определённой степени", "at least to a certain extent", "📏",
+    [{en:"partly",ru:"частично"},{en:"somewhat",ru:"до некоторой степени"}],
+    [{en:"entirely",ru:"полностью"},{en:"completely",ru:"совершенно"}], "docx"),
+  V("fly in the face of", "идти вразрез с", "flying in the face of popular opinion", "🌪️",
+    [{en:"contradict",ru:"противоречить"},{en:"defy",ru:"бросать вызов"}],
+    [{en:"conform to",ru:"соответствовать"},{en:"comply with",ru:"следовать"}], "docx"),
+  V("go along with", "соглашаться, поддерживать", "cannot go along with the belief", "🤝",
+    [{en:"agree to",ru:"соглашаться на"},{en:"accept",ru:"принимать"}],
+    [{en:"reject",ru:"отвергать"},{en:"resist",ru:"сопротивляться"}], "docx"),
+  V("dwell on", "зацикливаться на", "we shouldn't dwell on failure", "🔄",
+    [{en:"brood over",ru:"терзаться мыслями"},{en:"obsess over",ru:"зацикливаться на"}],
+    [{en:"let go",ru:"отпустить"},{en:"move on",ru:"двигаться дальше"}], "docx"),
+  V("get hung up about", "застрять на, зациклиться", "get hung up about all our mistakes", "🧩",
+    [{en:"obsess about",ru:"зацикливаться"},{en:"fret about",ru:"переживать из-за"}],
+    [{en:"shrug off",ru:"не придавать значения"},{en:"let go",ru:"отпустить"}], "docx"),
+  V("have what it takes", "иметь необходимые качества", "don't have what it takes", "⭐",
+    [{en:"be capable",ru:"быть способным"},{en:"be qualified",ru:"быть подготовленным"}],
+    [{en:"lack ability",ru:"не иметь способностей"},{en:"fall short",ru:"не дотягивать"}], "docx"),
+  V("it bugs me", "меня это бесит", "It bugs me when I hear...", "🐛",
+    [{en:"it annoys me",ru:"меня раздражает"},{en:"it irritates me",ru:"меня раздражает"}],
+    [{en:"it pleases me",ru:"меня радует"},{en:"it delights me",ru:"меня восхищает"}], "docx"),
+  V("patently not true", "явно неверно", "It is patently not true", "❌",
+    [{en:"clearly false",ru:"явно ложный"},{en:"obviously untrue",ru:"очевидно неверный"}],
+    [{en:"plainly true",ru:"явно верный"},{en:"undeniably true",ru:"бесспорно верный"}], "docx"),
+  V("give it a good go", "хорошенько попытаться", "Give it a good go", "👊",
+    [{en:"try hard",ru:"усердно пытаться"},{en:"make a real effort",ru:"приложить усилия"}],
+    [{en:"give up easily",ru:"легко сдаваться"}], "docx"),
+  V("be cut out to be", "быть созданным для роли", "I wasn't cut out to be a crime writer", "✂️",
+    [{en:"be suited to be",ru:"подходить для роли"},{en:"be destined to be",ru:"быть предназначенным"}],
+    [{en:"be unsuited to be",ru:"не подходить для роли"}], "docx"),
+  V("get real about", "взглянуть реалистично на", "We need to get real about failure", "🎯",
+    [{en:"face the facts about",ru:"смотреть правде в глаза"},{en:"be realistic about",ru:"быть реалистом насчёт"}],
+    [{en:"be in denial about",ru:"отрицать реальность"}], "docx"),
+  V("vacuous comments", "пустые комментарии", "all these vacuous comments", "💭",
+    [{en:"empty comments",ru:"пустые комментарии"},{en:"meaningless remarks",ru:"бессмысленные замечания"}],
+    [{en:"profound comments",ru:"глубокие комментарии"},{en:"meaningful remarks",ru:"содержательные замечания"}], "cambridge"),
+  V("sweeping statements", "обобщающие утверждения", "sweeping statements on social media", "🧹",
+    [{en:"sweeping generalizations",ru:"огульные обобщения"},{en:"blanket statements",ru:"обобщающие заявления"}],
+    [{en:"nuanced claims",ru:"нюансированные утверждения"},{en:"specific remarks",ru:"конкретные замечания"}], "docx"),
+  V("lose it", "выйти из себя, взорваться", "I'm going to lose it", "🤯",
+    [{en:"lose your temper",ru:"выйти из себя"},{en:"explode",ru:"взорваться"},{en:"blow up",ru:"вспылить"}],
+    [{en:"stay calm",ru:"оставаться спокойным"},{en:"keep your cool",ru:"сохранять хладнокровие"}], "docx"),
+  V("trite phrases", "избитые фразы, клише", "They trot out these trite phrases", "📜",
+    [{en:"clichés",ru:"клише"},{en:"hackneyed phrases",ru:"избитые фразы"},{en:"platitudes",ru:"банальности"}],
+    [{en:"original phrases",ru:"оригинальные фразы"},{en:"fresh wording",ru:"свежие формулировки"}], "docx"),
+  V("trot out", "выдавать (избитые фразы)", "trot out these trite phrases", "🐎",
+    [{en:"parrot",ru:"повторять как попугай"},{en:"recite",ru:"зачитывать"}],
+    [{en:"withhold",ru:"утаивать"}], "docx"),
+  V("complete fallacies", "полные заблуждения", "actually wrong, complete fallacies", "🎭",
+    [{en:"utter misconceptions",ru:"полные заблуждения"},{en:"total falsehoods",ru:"абсолютная ложь"}],
+    [{en:"established facts",ru:"установленные факты"},{en:"proven truths",ru:"доказанные истины"}], "docx"),
+  V("dire consequences", "ужасные последствия", "It can have dire consequences", "⚠️",
+    [{en:"severe consequences",ru:"серьёзные последствия"},{en:"grave consequences",ru:"тяжкие последствия"}],
+    [{en:"minor consequences",ru:"незначительные последствия"},{en:"trivial effects",ru:"пустяковые последствия"}], "docx"),
+  V("knock one's confidence", "подорвать уверенность", "knock your confidence", "🥊",
+    [{en:"undermine one's confidence",ru:"подорвать уверенность"},{en:"shake one's confidence",ru:"пошатнуть уверенность"}],
+    [{en:"boost one's confidence",ru:"укрепить уверенность"},{en:"boost one's morale",ru:"поднять дух"}], "docx"),
+  V("rob someone of", "лишить кого-то чего-то", "rob you of a job", "💰",
+    [{en:"deprive someone of",ru:"лишать кого-то"},{en:"strip someone of",ru:"отбирать у кого-то"}],
+    [{en:"provide someone with",ru:"обеспечивать кого-то"},{en:"give someone",ru:"давать кому-то"}], "docx"),
 ];
 
-const quizData = [
-  { q: "Что означает <b>\"cringe-worthy\"</b>?", options: ["вдохновляющий", "вызывающий неловкость", "захватывающий", "убедительный"], correct: 1, explanation: "Cringe-worthy = вызывающий чувство стыда или неловкости" },
-  { q: "\"Throw in the towel\" означает:", options: ["начать тренировку", "сдаться, капитулировать", "выиграть бой", "полотенце для спортзала"], correct: 1, explanation: "Идиома из бокса: тренер бросает полотенце в ринг" },
-  { q: "Что значит <b>\"fly in the face of\"</b>?", options: ["летать напротив", "идти вразрез с", "столкнуться лицом к лицу", "быть честным"], correct: 1, explanation: "Fly in the face of = действовать вопреки чему-то" },
-  { q: "\"It bugs me\" — это:", options: ["Это меня вдохновляет", "Это меня бесит", "Это меня удивляет", "Это меня радует"], correct: 1, explanation: "Bug (глагол) = раздражать, досаждать" },
-  { q: "Что такое <b>\"vacuous comments\"</b>?", options: ["важные комментарии", "пустые комментарии", "критические замечания", "полезные советы"], correct: 1, explanation: "Vacuous = пустой, бессодержательный" },
-  { q: "\"Be cut out to be\" означает:", options: ["быть вырезанным", "быть созданным для роли", "быть исключённым", "быть готовым"], correct: 1, explanation: "Be cut out for/to be = иметь природные способности" },
-  { q: "Что значит <b>\"make strides\"</b>?", options: ["делать большие шаги", "делать успехи", "отступать", "падать"], correct: 1, explanation: "Make strides = добиваться значительного прогресса" },
-  { q: "\"Sweeping statements\" — это:", options: ["уборочные заявления", "обобщающие утверждения", "точные факты", "личные мнения"], correct: 1, explanation: "Sweeping = обобщающий, охватывающий всё" },
-  { q: "Что означает <b>\"galling\"</b>?", options: ["радостный", "оскорбительный, неприятный", "удивительный", "смешной"], correct: 1, explanation: "Galling = вызывающий раздражение и досаду" },
-  { q: "\"Strike a chord with someone\" значит:", options: ["ударить по аккорду", "найти отклик", "сыграть музыку", "поссориться"], correct: 1, explanation: "Музыкальная метафора: звучит в унисон с чувствами" },
-  { q: "Что значит <b>\"dwell on\"</b>?", options: ["жить в", "зацикливаться на", "забывать о", "игнорировать"], correct: 1, explanation: "Dwell on = долго и навязчиво думать о чём-то" },
-  { q: "\"Dire consequences\" — это:", options: ["прямые последствия", "ужасные последствия", "незначительные результаты", "положительные итоги"], correct: 1, explanation: "Dire = крайне серьёзный, ужасный" },
-  { q: "Что означает <b>\"in light of this\"</b>?", options: ["при ярком свете", "в свете этого", "в тени этого", "несмотря на это"], correct: 1, explanation: "In light of = учитывая, принимая во внимание" },
-  { q: "\"See where someone is coming from\" означает:", options: ["видеть, откуда идёт", "понимать точку зрения", "следить за кем-то", "встречать"], correct: 1, explanation: "Идиома: понимать логику собеседника" },
-  { q: "Что значит <b>\"be spot on\"</b>?", options: ["быть грязным", "быть абсолютно точным", "быть на месте", "иметь пятна"], correct: 1, explanation: "Spot on = точно в цель, совершенно верно" },
-  { q: "\"Have what it takes\" означает:", options: ["брать то, что дают", "иметь необходимые качества", "забирать своё", "требовать многого"], correct: 1, explanation: "Иметь талант или ресурсы для достижения цели" },
-  { q: "Что такое <b>\"complete fallacies\"</b>?", options: ["полные заблуждения", "завершённые проекты", "абсолютная правда", "сложные задачи"], correct: 0, explanation: "Fallacy = ложное умозаключение, заблуждение" },
-  { q: "\"Go along with something\" значит:", options: ["идти вместе с кем-то", "соглашаться с идеей", "уходить с чем-то", "продолжать путь"], correct: 1, explanation: "Go along with = соглашаться с планом/мнением" },
-];
+// ============ QUIZ (generated from vocabulary) ============
+function shuffle(a) {
+  const arr = [...a];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+let quizData = [];
+function buildQuiz() {
+  const pool = vocabulary.filter(v => v.ru);
+  const picked = shuffle(pool).slice(0, 20);
+  return picked.map(item => {
+    const wrong = shuffle(pool.filter(v => v.ru !== item.ru)).slice(0, 3).map(v => v.ru);
+    const options = shuffle([item.ru, ...wrong]);
+    return {
+      q: `Что означает <b>"${item.en}"</b>?`,
+      options,
+      correct: options.indexOf(item.ru),
+      explanation: `${item.en} — ${item.ru}`
+    };
+  });
+}
+
+// ============ SYNONYMS / ANTONYMS (generated per block) ============
+function buildQuestions(kind) {
+  const isSyn = kind === 'syn';
+  const pick = v => (isSyn ? v.syn : v.ant);
+  const other = v => (isSyn ? v.ant : v.syn);
+
+  const allPool = [...new Set(vocabulary.flatMap(v => pick(v).map(s => s.en)))];
+
+  const qs = vocabulary.filter(v => pick(v).length).map(v => {
+    const ownLower = pick(v).map(s => s.en.toLowerCase());
+    const otherLower = other(v).map(s => s.en.toLowerCase());
+    const correct = pick(v)[0].en;
+    const distract = shuffle(allPool.filter(x =>
+      !ownLower.includes(x.toLowerCase()) && !otherLower.includes(x.toLowerCase()))).slice(0, 3);
+    if (distract.length < 3) return null;
+
+    const options = shuffle([correct, ...distract]);
+    const synTxt = v.syn.length ? `синонимы: ${v.syn.map(s => s.en + ' (' + s.ru + ')').join(', ')}` : '';
+    const antTxt = v.ant.length ? `антонимы: ${v.ant.map(s => s.en + ' (' + s.ru + ')').join(', ')}` : '';
+    const comment = [synTxt, antTxt].filter(Boolean).join('; ');
+
+    return {
+      q: `Выбери <b>${isSyn ? 'синоним' : 'антоним'}</b> к «${v.en}»`,
+      options,
+      correct: options.indexOf(correct),
+      explanation: `${v.en} → ${comment}`
+    };
+  }).filter(Boolean);
+
+  return shuffle(qs).slice(0, 20);
+}
 
 const fillInData = [
   { sentence: "If you put your ______ and soul into something, you don't want to be told it isn't good enough.", answer: "heart", hint: "вложить душу" },
@@ -1250,6 +1460,11 @@ let learnedSet = new Set();
 let matchLeft = null;
 let fillIndex = 0;
 let quizHistory = [];
+
+const engines = {
+  syn: { data: [], index: 0, correct: 0, history: [] },
+  ant: { data: [], index: 0, correct: 0, history: [] }
+};
 
 const unlockedBadges = new Set();
 
@@ -1327,7 +1542,7 @@ function checkAchievements() {
     { id: 'first-steps', condition: () => learnedSet.size >= 5, text: 'Первые шаги: 5 карточек изучено!' },
     { id: 'streak-3', condition: () => streak >= 3, text: 'Серия из 3 правильных подряд!' },
     { id: 'streak-5', condition: () => streak >= 5, text: 'Серия из 5! Ты в ударе!' },
-    { id: 'half-done', condition: () => learnedSet.size >= 20, text: 'Половина пути пройдена!' },
+    { id: 'half-done', condition: () => learnedSet.size >= Math.floor(vocabulary.length / 2), text: 'Половина пути пройдена!' },
     { id: 'perfectionist', condition: () => streak >= 10, text: 'Перфекционист: 10 правильных подряд!' },
     { id: 'master', condition: () => learnedSet.size >= vocabulary.length, text: '🏆 Мастер: все слова изучены!' },
   ];
@@ -1363,6 +1578,8 @@ function showSection(id, e) {
   if (id === 'matching') initMatching();
   if (id === 'fillin') initFillIn();
   if (id === 'grammar') initGrammar();
+  if (id === 'syn') initSynAnt('syn');
+  if (id === 'ant') initSynAnt('ant');
 }
 
 // ============ FLASHCARDS ============
@@ -1372,11 +1589,27 @@ function updateCard() {
   document.getElementById('fcFrontText').textContent = v.en;
   document.getElementById('fcBackText').textContent = v.ru;
   document.getElementById('fcExample').textContent = '"' + v.ex + '"';
+  renderSynAnt(v);
   document.getElementById('cardCounter').textContent = (currentCard + 1) + ' / ' + vocabulary.length;
   document.getElementById('flashcard').classList.remove('flipped');
   learnedSet.add(currentCard);
   updateStats();
   checkAchievements();
+}
+
+function renderSynAnt(v) {
+  const box = document.getElementById('fcSynAnt');
+  let html = '';
+  if (v.syn.length) {
+    html += `<div class="syn-row"><span class="tag tag-syn">Синонимы</span>` +
+      v.syn.map(s => `<span class="chip">${s.en} <b>— ${s.ru}</b></span>`).join('') + `</div>`;
+  }
+  if (v.ant.length) {
+    html += `<div class="syn-row"><span class="tag tag-ant">Антонимы</span>` +
+      v.ant.map(s => `<span class="chip">${s.en} <b>— ${s.ru}</b></span>`).join('') + `</div>`;
+  }
+  if (!html) html = `<div class="syn-row"><span class="tag tag-syn">Синонимы</span><span class="chip">—</span></div>`;
+  box.innerHTML = html;
 }
 
 function flipCard() {
@@ -1395,6 +1628,7 @@ function prevCard() {
 
 // ============ QUIZ ============
 function initQuiz() {
+  quizData = buildQuiz();
   quizIndex = 0;
   quizCorrect = 0;
   quizHistory = [];
@@ -1452,7 +1686,7 @@ function showQuizQuestion() {
 
 function checkQuiz(idx) {
   const q = quizData[quizIndex];
-  const opts = document.querySelectorAll('.quiz-option');
+  const opts = document.querySelectorAll('#quizArea .quiz-option');
   opts.forEach(o => o.classList.add('disabled'));
   opts[idx].classList.add(idx === q.correct ? 'correct' : 'wrong');
   if (idx !== q.correct) opts[q.correct].classList.add('correct');
@@ -1482,6 +1716,95 @@ function checkQuiz(idx) {
 function nextQuizQuestion() {
   quizIndex++;
   showQuizQuestion();
+}
+
+// ============ SYNONYMS / ANTONYMS EXERCISE ============
+function initSynAnt(kind) {
+  const e = engines[kind];
+  e.data = buildQuestions(kind);
+  e.index = 0;
+  e.correct = 0;
+  e.history = [];
+  renderSynAntProgress(kind);
+  showSynAntQuestion(kind);
+}
+
+function renderSynAntProgress(kind) {
+  const e = engines[kind];
+  const container = document.getElementById(kind + 'Progress');
+  container.innerHTML = '';
+  for (let i = 0; i < e.data.length; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'quiz-dot';
+    if (i === e.index) dot.classList.add('active');
+    if (e.history[i] === 'correct') dot.classList.add('correct');
+    if (e.history[i] === 'wrong') dot.classList.add('wrong');
+    container.appendChild(dot);
+  }
+}
+
+function showSynAntQuestion(kind) {
+  const e = engines[kind];
+  const area = document.getElementById(kind + 'Area');
+  if (e.index >= e.data.length) {
+    const pct = Math.round((e.correct / e.data.length) * 100);
+    let emoji = '😅';
+    if (pct >= 90) emoji = '🏆';
+    else if (pct >= 70) emoji = '🎉';
+    else if (pct >= 50) emoji = '👍';
+    area.innerHTML = `
+      <div class="quiz-score">
+        <span class="quiz-score-emoji">${emoji}</span>
+        <div class="quiz-score-num">${e.correct} / ${e.data.length}</div>
+        <div style="color:var(--text-secondary);margin-bottom:24px">${pct}% правильных ответов</div>
+        <button class="check-btn" onclick="initSynAnt('${kind}')">🔄 Пройти снова</button>
+      </div>`;
+    if (pct >= 70) launchConfetti();
+    return;
+  }
+  const q = e.data[e.index];
+  const letters = ['A', 'B', 'C', 'D'];
+  let html = `<div class="quiz-question">${q.q}</div><div class="quiz-options">`;
+  q.options.forEach((opt, i) => {
+    html += `<button class="quiz-option" onclick="checkSynAnt('${kind}', ${i})">
+      <span class="option-letter">${letters[i]}</span>
+      <span>${opt}</span>
+    </button>`;
+  });
+  html += `</div>
+    <div class="quiz-feedback" id="${kind}Feedback"></div>
+    <button class="quiz-next-btn" id="${kind}NextBtn" onclick="nextSynAntQuestion('${kind}')">Следующий вопрос →</button>`;
+  area.innerHTML = html;
+  renderSynAntProgress(kind);
+}
+
+function checkSynAnt(kind, idx) {
+  const e = engines[kind];
+  const q = e.data[e.index];
+  const opts = document.querySelectorAll('#' + kind + 'Area .quiz-option');
+  opts.forEach(o => o.classList.add('disabled'));
+  opts[idx].classList.add(idx === q.correct ? 'correct' : 'wrong');
+  if (idx !== q.correct) opts[q.correct].classList.add('correct');
+
+  const fb = document.getElementById(kind + 'Feedback');
+  fb.className = 'quiz-feedback show ' + (idx === q.correct ? 'correct-fb' : 'wrong-fb');
+  fb.innerHTML = (idx === q.correct ? '✅ Верно! ' : '❌ Неверно. ') + q.explanation;
+
+  document.getElementById(kind + 'NextBtn').classList.add('show');
+  totalAttempts++;
+  if (idx === q.correct) {
+    totalCorrect++; e.correct++; streak++; e.history[e.index] = 'correct';
+  } else {
+    streak = 0; e.history[e.index] = 'wrong';
+  }
+  updateStats();
+  checkAchievements();
+  renderSynAntProgress(kind);
+}
+
+function nextSynAntQuestion(kind) {
+  engines[kind].index++;
+  showSynAntQuestion(kind);
 }
 
 // ============ MATCHING ============
@@ -1585,26 +1908,33 @@ function showFillQuestion() {
 function checkFill() {
   const f = fillInData[fillIndex];
   const input = document.getElementById('fillInput');
-  if (!input || input.disabled) return;
+  if (!input || input.dataset.solved === '1') return;
   const val = input.value.trim().toLowerCase();
   const correct = f.answer.toLowerCase();
   const fb = document.getElementById('fillFeedback');
 
-  totalAttempts++;
   if (val === correct) {
+    input.classList.remove('wrong-input');
     input.classList.add('correct-input');
     fb.className = 'quiz-feedback show correct-fb';
     fb.innerHTML = '✅ Верно!';
+    input.dataset.solved = '1';
+    input.disabled = true;
+    document.getElementById('fillNextBtn').classList.add('show');
+    totalAttempts++;
     totalCorrect++;
     streak++;
   } else {
+    input.classList.remove('correct-input');
     input.classList.add('wrong-input');
     fb.className = 'quiz-feedback show wrong-fb';
-    fb.innerHTML = `❌ Неверно. Правильный ответ: <b>${f.answer}</b>`;
+    fb.innerHTML = `❌ Неверно. Правильный ответ: <b>${f.answer}</b>.<br>Введи его, чтобы закрепить.`;
+    input.dataset.tried = '1';
+    totalAttempts++;
     streak = 0;
+    input.focus();
+    input.select();
   }
-  input.disabled = true;
-  document.getElementById('fillNextBtn').classList.add('show');
   updateStats();
   checkAchievements();
 }
@@ -1652,6 +1982,7 @@ document.addEventListener('keydown', e => {
 });
 
 // ============ INIT ============
+document.getElementById('halfTooltip').textContent = 'Половина пути: ' + Math.floor(vocabulary.length / 2) + ' карточек';
 updateCard();
 updateStats();
 initMatching();
